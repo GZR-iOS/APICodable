@@ -1,0 +1,5 @@
+use_frameworks!
+
+target 'APICodableExample' do
+  pod 'APICodable', :path => '../'
+end
