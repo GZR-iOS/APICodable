@@ -28,29 +28,6 @@ public var NWLogGroup = "🌏"
 
 // MARK: -
 
-public protocol NWRawDataContainer: Hashable {
-
-    associatedtype ValueType: Hashable
-
-    var value: ValueType { get }
-    init(_ raw: ValueType)
-
-}
-
-public extension NWRawDataContainer {
-
-    public var hashValue: Int {
-        return value.hashValue
-    }
-
-    public static func ==(lhs: Self, rhs: Self) -> Bool {
-        return lhs.value == rhs.value
-    }
-
-}
-
-// MARK: -
-
 // TODO: UPDATE rfc
 
 // https://tools.ietf.org/html/rfc2616

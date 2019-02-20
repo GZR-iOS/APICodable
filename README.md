@@ -21,3 +21,7 @@ Copyright © 2019 GMO-Z.com RunSystem.
 ### 1.0:
 
 - Build
+
+### 1.0.1:
+
+- Log separate

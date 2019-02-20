@@ -7,12 +7,11 @@
 #
 
 Pod::Spec.new do |s|
-  s.name             = 'APICodable'
+  s.name             = 'NWLogger'
   s.version          = '1.0.1'
-  s.summary          = 'HTTP Request with NSURLSession and Swift Codable'
+  s.summary          = 'asynchronous logger'
   s.description      = <<-DESC
-Use Swift Codable models to make request parameters.
-Use URLSession to request HTTP.
+Print log to console in separate thread.
                        DESC
   s.homepage         = 'https://github.com/GZR-iOS/APICodable'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
@@ -20,5 +19,5 @@ Use URLSession to request HTTP.
   s.source           = { :git => 'https://github.com/GZR-iOS/APICodable.git', :branch => "version/" + s.version.to_s }
   s.ios.deployment_target = '8.0'
   s.osx.deployment_target = '10.12'
-  s.source_files     = 'APICodable/**/*'
+  s.source_files     = 'APICodable/NWLogging.swift'
 end
