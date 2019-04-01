@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import CommonLog
 
 func NWGetRequestDescription(request: URLRequest, bodyDesc: String?) -> String {
     var result = "REQUEST START:\n"
@@ -17,7 +18,7 @@ func NWGetRequestDescription(request: URLRequest, bodyDesc: String?) -> String {
     var encoding = String.Encoding.utf8
     var isJson = false
     if let header = request.allHTTPHeaderFields, header.count > 0 {
-        result += "HEADERS:\n" + NWGetDictionaryDescription(header) + "\n"
+        result += "HEADERS:\n" + CMGetDictionaryDescription(header) + "\n"
         if let contentTypeRaw = header[HTTPRequestHeaderField.contentType.value],
             let contentType = try? NWContentType(httpContentType: contentTypeRaw) {
             let params = contentType.getValueAndParameters()
@@ -59,7 +60,7 @@ func NWGetResponseDescription(task: URLSessionTask?, data: Data?) -> String {
         var encoding = String.Encoding.utf8
         var isJson = false
         let header = response.allHeaderFields
-        result += "HEADERS:\n" + NWGetDictionaryDescription(header) + "\n"
+        result += "HEADERS:\n" + CMGetDictionaryDescription(header) + "\n"
         if let contentTypeRaw = header[HTTPRequestHeaderField.contentType.value] as? String,
             let contentType = try? NWContentType(httpContentType: contentTypeRaw) {
             let params = contentType.getValueAndParameters()

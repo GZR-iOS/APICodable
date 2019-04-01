@@ -8,6 +8,7 @@
 import UIKit
 import UserNotifications
 import APICodable
+import CommonLog
 
 let kDomain = "http://127.0.0.1/test/"
 let kSampleApiUrl = kDomain + "simple.php"
@@ -108,7 +109,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             do {
                 try req.start(kBackgroundSessionKey)
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
             }
         }
     }

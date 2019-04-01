@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CommonLog
 
 public struct NWApiRequestDataMakerReturnType {
     let request: URLRequest
@@ -42,8 +43,12 @@ public protocol NWApiRequestUploadMaker {
 
 /// Protocol for data response handler
 public protocol NWApiDataResponseHandler {
+
+    var rawData: Data? { get }
+    var header: HTTPURLResponse?  { get }
+
     var responseBodyDescription: String? { get }
-    func processResponse(data: Data?, header: HTTPURLResponse?) throws
+    func processResponse(data: Data?, response: HTTPURLResponse?) throws
 }
 
 /// Protocol for download response handler
@@ -188,6 +193,7 @@ open class NWApiRequest {
 
     public let taskType: RequestType
     public private(set) var state: State = .made
+    public internal(set) var isAuthenticationFailed = false
     public let url: URL
     public var requestConfigurationAction: ((inout URLRequest) -> Void)?
     /// Sending progress action: (bytes send, total bytes send, total bytes to send, instance speed, average speed)
@@ -208,7 +214,7 @@ open class NWApiRequest {
     }
 
     deinit {
-        NWLog("NWApiRequest<\(Unmanaged.passUnretained(self).toOpaque())> dies!", category: NWLogger.LogCategory.info, group: NWLogGroup)
+        CMLog("NWApiRequest<\(Unmanaged.passUnretained(self).toOpaque())> dies!", category: CMLogger.LogCategory.info, group: NWLogGroup)
     }
 
     public init(link: URL, rqType: RequestType) {
@@ -221,32 +227,32 @@ open class NWApiRequest {
         self.init(link: Bundle.main.bundleURL, rqType: RequestType.resume(resume))
     }
 
-    private func startTask(_ tsk: URLSessionTask, bodyDesc: String?) {
-        NWApiManager.shared.registRequest(self)
+    private func startTask(_ tsk: URLSessionTask, session: String, bodyDesc: String?) {
+        NWApiManager.shared.registRequest(request: self, session: session)
         task = tsk
         tsk.resume()
         state = .sending
         startingDate = Date()
         lastDate = startingDate
         if let request = tsk.currentRequest {
-            NWLog(block: { () -> String in
+            CMLog(block: { () -> String in
                 return NWGetRequestDescription(request: request, bodyDesc: bodyDesc)
             }, category: .info, group: NWLogGroup)
         }
     }
 
-    private func makeDataRequest(session: URLSession, maker: NWApiRequestDataMaker, parameter: Any?) {
+    private func makeDataRequest(session: URLSession, sessionName: String, maker: NWApiRequestDataMaker, parameter: Any?) {
         do {
             let result = try maker.generateRequest(sender: self, parameter: parameter)
             var req = result.request
             configureRequest(&req)
-            startTask(session.dataTask(with: req), bodyDesc: result.debugDescription)
+            startTask(session.dataTask(with: req), session: sessionName, bodyDesc: result.debugDescription)
         } catch (let err) {
             finishRequest(with: err)
         }
     }
 
-    private func makeUploadRequest(session: URLSession, maker: NWApiRequestUploadMaker, parameter: Any?) {
+    private func makeUploadRequest(session: URLSession, sessionName: String, maker: NWApiRequestUploadMaker, parameter: Any?) {
         do {
             let result = try maker.generateRequest(sender: self, parameter: parameter)
             var req = result.request
@@ -256,10 +262,10 @@ open class NWApiRequest {
                     uploadFile = file
                 }
                 let tsk = session.uploadTask(with: req, fromFile: URL(fileURLWithPath: file))
-                startTask(tsk, bodyDesc: result.debugDescription)
+                startTask(tsk, session: sessionName, bodyDesc: result.debugDescription)
             } else if let dat = result.data {
                 let tsk = session.uploadTask(with: req, from: dat)
-                startTask(tsk, bodyDesc: result.debugDescription)
+                startTask(tsk, session: sessionName, bodyDesc: result.debugDescription)
             } else {
                 finishRequest(with: ApiRequestError.invalidUploadMaker)
             }
@@ -268,19 +274,19 @@ open class NWApiRequest {
         }
     }
 
-    private func makeDownloadRequest(session: URLSession, maker: NWApiRequestDataMaker, parameter: Any?) {
+    private func makeDownloadRequest(session: URLSession, sessionName: String, maker: NWApiRequestDataMaker, parameter: Any?) {
         do {
             let result = try maker.generateRequest(sender: self, parameter: parameter)
             var req = result.request
             configureRequest(&req)
-            startTask(session.downloadTask(with: req), bodyDesc: result.debugDescription)
+            startTask(session.downloadTask(with: req), session: sessionName, bodyDesc: result.debugDescription)
         } catch (let err) {
             finishRequest(with: err)
         }
     }
 
-    private func makeResumeRequest(session: URLSession, data: Data) {
-        startTask(session.downloadTask(withResumeData: data), bodyDesc: nil)
+    private func makeResumeRequest(session: URLSession, sessionName: String, data: Data) {
+        startTask(session.downloadTask(withResumeData: data), session: sessionName, bodyDesc: nil)
     }
 
     /// Start request using session with given configuration key
@@ -289,23 +295,24 @@ open class NWApiRequest {
             throw ApiRequestError.alreadyLoading
         }
         dlError = nil
+        isAuthenticationFailed = false
         if let session = NWApiManager.shared.getSession(configName) {
             let mSelf = self
             queue.addOperation {
                 mSelf.state = .start
                 switch mSelf.taskType {
                 case .data(let args):
-                    mSelf.makeDataRequest(session: session, maker: args.requestMaker, parameter: args.parameter)
+                    mSelf.makeDataRequest(session: session, sessionName: configName, maker: args.requestMaker, parameter: args.parameter)
                 case .upload(let args):
-                    mSelf.makeUploadRequest(session: session, maker: args.requestMaker, parameter: args.parameter)
+                    mSelf.makeUploadRequest(session: session, sessionName: configName, maker: args.requestMaker, parameter: args.parameter)
                 case .download(let args):
-                    mSelf.makeDownloadRequest(session: session, maker: args.requestMaker, parameter: args.parameter)
+                    mSelf.makeDownloadRequest(session: session, sessionName: configName, maker: args.requestMaker, parameter: args.parameter)
                 case .resume(let args):
-                    mSelf.makeResumeRequest(session: session, data: args.resumeData)
+                    mSelf.makeResumeRequest(session: session, sessionName: configName, data: args.resumeData)
                 }
             }
         } else {
-            NWLog("Session '\(configName)' not found!", category: NWLogger.LogCategory.critical, group: NWLogGroup)
+            CMLog("Session '\(configName)' not found!", category: CMLogger.LogCategory.critical, group: NWLogGroup)
             throw ApiRequestError.sessionNotFound
         }
     }
@@ -355,10 +362,10 @@ open class NWApiRequest {
 
     // MARK: - Session
 
-    private func logResponse(_ additionalJob: (() -> String)?, category: NWLogger.LogCategory, logTask: URLSessionTask?,
+    private func logResponse(_ additionalJob: (() -> String)?, category: CMLogger.LogCategory, logTask: URLSessionTask?,
                              functionName: String = #function, fileName: String = #file, lineNum: Int = #line) {
         let data = buffer
-        NWLog(block: { () -> String in
+        CMLog(block: { () -> String in
             var result = NWGetResponseDescription(task: logTask, data: data)
             if let action = additionalJob {
                 result += "\n" + action()
@@ -367,12 +374,12 @@ open class NWApiRequest {
         }, category: category, group: NWLogGroup, functionName: functionName, fileName: fileName, lineNum: lineNum)
     }
 
-    private func logRequestFinish(error: Error, category: NWLogger.LogCategory, logTask: URLSessionTask?,
+    private func logRequestFinish(error: Error, category: CMLogger.LogCategory, logTask: URLSessionTask?,
                                   functionName: String = #function, fileName: String = #file, lineNum: Int = #line) {
-        NWLog(error, category: category, group: NWLogGroup, functionName: functionName, fileName: fileName, lineNum: lineNum)
+        CMLog(error, category: category, group: NWLogGroup, functionName: functionName, fileName: fileName, lineNum: lineNum)
     }
 
-    private func finishRequest(with error: Error, logCategory: NWLogger.LogCategory = .critical, task: URLSessionTask? = nil) {
+    private func finishRequest(with error: Error, logCategory: CMLogger.LogCategory = .critical, task: URLSessionTask? = nil) {
         logRequestFinish(error: error, category: logCategory, logTask: task)
         state = .finished
         let mSelf = self
@@ -449,7 +456,7 @@ open class NWApiRequest {
                                          failureAction: DataFailureAction?, task: URLSessionTask?) {
         let mSelf = self
         do {
-            try handler.processResponse(data: buffer, header: task?.response as? HTTPURLResponse)
+            try handler.processResponse(data: buffer, response: task?.response as? HTTPURLResponse)
             if let desc = handler.responseBodyDescription {
                 logResponse({ () -> String in
                     return "DEVELOPMENT INFO:\n" + desc

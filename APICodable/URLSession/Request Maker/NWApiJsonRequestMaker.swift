@@ -9,7 +9,7 @@ import Foundation
 
 public extension Encodable {
 
-    public func toJsonData(_ encoder: JSONEncoder) throws -> Data {
+    func toJsonData(_ encoder: JSONEncoder) throws -> Data {
         return try encoder.encode(self)
     }
 
@@ -21,6 +21,8 @@ public extension Encodable {
 public class NWApiJsonRequestMaker: NWApiRequestDataMaker {
 
     public var jsonEncoder = JSONEncoder()
+
+    public init() {}
 
     public func generateRequest(sender: NWApiRequest, parameter: Any?) throws -> NWApiRequestDataMakerReturnType {
         var result = URLRequest(url: sender.url)

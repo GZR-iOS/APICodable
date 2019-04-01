@@ -8,6 +8,7 @@
 
 import UIKit
 import APICodable
+import CommonLog
 
 class ProgressViewController: UIViewController {
 
@@ -74,7 +75,7 @@ class ProgressViewController: UIViewController {
     private func setProgress(_ ratio: CGFloat) {
         let target = progressView.superview!
         target.removeConstraint(progressConstraint)
-        let constraint = NSLayoutConstraint(item: progressView, attribute: .width, relatedBy: .equal,
+        let constraint = NSLayoutConstraint(item: progressView as Any, attribute: .width, relatedBy: .equal,
                                             toItem: target, attribute: .width,
                                             multiplier: ratio, constant: 0)
         target.addConstraint(constraint)
@@ -89,7 +90,7 @@ class ProgressViewController: UIViewController {
 
     private func doUpload() {
         if let url = URL(string: kSampleApiUrl), let fileUrl = Bundle.main.url(forResource: "movie", withExtension: "mp4") {
-            NWLog("File to upload:", fileUrl)
+            CMLog("File to upload:", fileUrl)
             let fSize: UInt64?
             if let filesize = try? (FileManager.default.attributesOfItem(atPath: fileUrl.path) as NSDictionary).fileSize() {
                 fSize = filesize
@@ -106,22 +107,22 @@ class ProgressViewController: UIViewController {
             var dataArgs = NWApiRequest.UploadRequestArgument(request: maker, response: handler)
             dataArgs.parameter = fileUrl
             dataArgs.successAction = {(sender, response) in
-                if let res = response as? NWApiBasicResponseHandler, let data = res.body, let header = res.response {
+                if let res = response as? NWApiBasicResponseHandler, let data = res.rawData, let header = res.header {
                     var encoding = String.Encoding.utf8
                     if let contentTypeRaw = header.headerValue(HTTPResponseHeaderField.contentType) as? String, let contentType = try? NWContentType(httpContentType: contentTypeRaw),
                         let params = contentType.getValueAndParameters().1, let encodingName = params[NWContentType.MainType.TextSubType.paramCharset] {
                         encoding = String.Encoding(httpCharset: encodingName)
                     }
                     if let dataStr = String(data: data, encoding: encoding) {
-                        NWLog(">>> Request success:", dataStr)
+                        CMLog(">>> Request success:", dataStr)
                     } else {
-                        NWLog(">>> Request success:", data.count)
+                        CMLog(">>> Request success:", data.count)
                     }
                 }
                 wSelf?.setProgress(1)
             }
             dataArgs.failureAction = {(sender, response, error) in
-                NWLog(">>> Request failed:", error)
+                CMLog(">>> Request failed:", error)
                 wSelf?.setProgress(1)
             }
             let req = NWApiRequest(link: url, rqType: NWApiRequest.RequestType.upload(dataArgs))
@@ -140,7 +141,7 @@ class ProgressViewController: UIViewController {
             do {
                 try req.start()
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
                 setProgress(1)
             }
         }
@@ -154,12 +155,12 @@ class ProgressViewController: UIViewController {
         weak var wSelf = self
         var rrequest: NWApiRequest?
         let successAction: NWApiRequest.DownloadSuccessAction = {(sender, response) in
-            NWLog(">>> Request success:", (response as? NWApiBasicDownloadResponseHandler)?.destination.path)
+            CMLog(">>> Request success:", (response as? NWApiBasicDownloadResponseHandler)?.destination.path)
             wSelf?.setProgress(1)
             wSelf?.cancelButton.setTitle("Restart", for: .normal)
         }
         let failureAction: NWApiRequest.DownloadFailureAction = {(sender, response, error) in
-            NWLog(">>> Request failed:", error)
+            CMLog(">>> Request failed:", error)
             wSelf?.setProgress(1)
             wSelf?.cancelButton.setTitle("Restart", for: .normal)
         }
@@ -205,7 +206,7 @@ class ProgressViewController: UIViewController {
             do {
                 try req.start()
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
                 cancelButton.isHidden = true
             }
         }
@@ -230,17 +231,17 @@ class ProgressViewController: UIViewController {
             }
             args.parameter = param
             args.successAction = {(sender, response) in
-                if let res = response as? NWApiBasicResponseHandler, let data = res.body {
+                if let res = response as? NWApiBasicResponseHandler, let data = res.rawData {
                     if let dataStr = String(data: data, encoding: .utf8) {
-                        NWLog(">>> Request success:", dataStr)
+                        CMLog(">>> Request success:", dataStr)
                     } else {
-                        NWLog(">>> Request success:", data.count)
+                        CMLog(">>> Request success:", data.count)
                     }
                 }
                 wSelf?.setProgress(1)
             }
             args.failureAction = {(sender, response, error) in
-                NWLog(">>> Request failed:", error)
+                CMLog(">>> Request failed:", error)
                 wSelf?.setProgress(1)
             }
             let req = NWApiRequest(link: url, rqType: .upload(args))
@@ -258,7 +259,7 @@ class ProgressViewController: UIViewController {
             do {
                 try req.start()
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
                 setProgress(1)
             }
         }

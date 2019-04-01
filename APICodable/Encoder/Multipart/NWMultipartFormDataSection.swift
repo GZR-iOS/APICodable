@@ -15,7 +15,7 @@ public protocol NWMultipartFormDataSectionData: Encodable {
 
 public extension NWMultipartFormDataSectionData {
 
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         if !(encoder is NWMultipartFormDataEncoder) {
             throw NWError.notSupport
         }
@@ -113,19 +113,19 @@ public struct NWMultipartFormDataSection: NWMultipartFormDataSectionData {
 
 public extension NWMultipartFormDataSection {
 
-    public enum MultipartFormDataSectionError: NWErrorType {
+    enum MultipartFormDataSectionError: NWErrorType {
         case failToMakePNGData
         case failToMakeJPEGData
     }
 
-    public init(inputName: String, value: String, inputEncoding: String.Encoding = .utf8) throws {
+    init(inputName: String, value: String, inputEncoding: String.Encoding = .utf8) throws {
         contentDisposition = try NWContentDisposition(formData: inputName, fileName: nil, fileNameEncode: inputEncoding)
         rawData = value.data(using: inputEncoding) ?? Data()
         encoding = inputEncoding
         contentType = try NWContentType(text: NWContentType.MainType.TextSubType.plain, charset: inputEncoding)
     }
 
-    public init(inputName: String, pngImage: NWImage, fileName: String? = nil, inputEncoding: String.Encoding = .utf8) throws {
+    init(inputName: String, pngImage: NWImage, fileName: String? = nil, inputEncoding: String.Encoding = .utf8) throws {
         encoding = inputEncoding
         contentDisposition = try NWContentDisposition(formData: inputName, fileName: fileName)
         contentType = try NWContentType(type: .image, subType: NWContentType.MainType.ImageSubType.png, parameter: nil)
@@ -136,7 +136,7 @@ public extension NWMultipartFormDataSection {
         }
     }
 
-    public init(inputName: String, jpegImage: NWImage, quality: CGFloat = 1.0,
+    init(inputName: String, jpegImage: NWImage, quality: CGFloat = 1.0,
                 fileName: String? = nil, inputEncoding: String.Encoding = .utf8) throws {
         encoding = inputEncoding
         contentDisposition = try NWContentDisposition(formData: inputName, fileName: fileName)

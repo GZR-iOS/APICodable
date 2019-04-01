@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol NWErrorType: Error, LocalizedError {}
+public protocol NWErrorType: LocalizedError {}
 
 extension NWErrorType {
 
@@ -28,7 +28,30 @@ public var NWLogGroup = "🌏"
 
 // MARK: -
 
-// TODO: UPDATE rfc
+public protocol NWRawDataContainer: Hashable {
+
+    associatedtype ValueType: Hashable
+
+    var value: ValueType { get }
+    init(_ raw: ValueType)
+
+}
+
+public extension NWRawDataContainer {
+
+    func hash(into hasher: inout Hasher) {
+        value.hash(into: &hasher)
+    }
+
+    var hashValue: Int {
+        return value.hashValue
+    }
+
+    static func ==(lhs: Self, rhs: Self) -> Bool {
+        return lhs.value == rhs.value
+    }
+
+}
 
 // https://tools.ietf.org/html/rfc2616
 
@@ -71,7 +94,7 @@ public struct HTTPDateTimeFormat: NWRawDataContainer {
 
     public let value: String
 
-    public init(_ raw: ValueType) {
+    public init(_ raw: String) {
         value = raw
     }
 
@@ -99,7 +122,7 @@ public struct HTTPContentCoding: NWRawDataContainer {
 
     public let value: String
 
-    public init(_ raw: ValueType) {
+    public init(_ raw: String) {
         value = raw
     }
 
@@ -120,7 +143,7 @@ public struct HTTPMethod: NWRawDataContainer {
 
     public let value: String
 
-    public init(_ raw: ValueType) {
+    public init(_ raw: String) {
         value = raw
     }
 

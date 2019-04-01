@@ -17,7 +17,7 @@ public class NWApiManager: NSObject, URLSessionDelegate, URLSessionTaskDelegate,
 
     private let requestOperationQueue = OperationQueue()
     private var sessions = [String: URLSession]()
-    private var requests = [NWApiRequest]()
+    private var requests = [String: [NWApiRequest]]()
     public var trustedHosts: [String]?
     public var username: String?
     public var password: String?
@@ -42,9 +42,11 @@ public class NWApiManager: NSObject, URLSessionDelegate, URLSessionTaskDelegate,
         setSession(configuration: configuration, for: NWApiManager.kDefaultSessionName)
     }
 
-    func registRequest(_ request: NWApiRequest) {
+    func registRequest(request: NWApiRequest, session: String) {
         requestOperationQueue.addOperation {
-            NWApiManager.shared.requests.append(request)
+            var array = NWApiManager.shared.requests[session] ?? []
+            array.append(request)
+            NWApiManager.shared.requests[session] = array
         }
     }
 
@@ -54,9 +56,15 @@ public class NWApiManager: NSObject, URLSessionDelegate, URLSessionTaskDelegate,
 
     func cancelRequest(request: NWApiRequest, task: URLSessionTask, completion: @escaping (Data?) -> Void) {
         requestOperationQueue.addOperation {
-            for (index, item) in NWApiManager.shared.requests.enumerated() where item === request {
-                NWApiManager.shared.requests.remove(at: index)
-                break
+            for (session, var array) in NWApiManager.shared.requests {
+                var found = false
+                for (index, item) in array.enumerated() where item === request {
+                    array.remove(at: index)
+                    NWApiManager.shared.requests[session] = array
+                    found = true
+                    break
+                }
+                if found { break }
             }
             if let dlTask = task as? URLSessionDownloadTask {
                 dlTask.cancel(byProducingResumeData: { (data) in
@@ -88,56 +96,61 @@ public class NWApiManager: NSObject, URLSessionDelegate, URLSessionTaskDelegate,
             }
             action(key, challenge, completionHandler)
         } else {
+            var sessName = ""
+            for (name, curSession) in sessions where curSession === session {
+                sessName = name
+                break
+            }
+            let array = requests[sessName] ?? []
+            for request in array {
+                request.isAuthenticationFailed = true
+            }
             completionHandler(.cancelAuthenticationChallenge, nil)
         }
     }
 
-    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        for request in requests where dataTask === request.task {
-            request.didReceive(response: response, completion: completionHandler)
-            break
+    private func findRequest(with task: URLSessionTask) -> NWApiRequest? {
+        for array in requests.values {
+            for request in array where task === request.task {
+                return request
+            }
         }
+        return nil
+    }
+
+    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+        findRequest(with: dataTask)?.didReceive(response: response, completion: completionHandler)
     }
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        for request in requests where dataTask === request.task {
-            request.didReceive(data)
-            break
-        }
+        findRequest(with: dataTask)?.didReceive(data)
     }
 
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        var index: Int? = nil
-        for (idx, request) in requests.enumerated() where task === request.task {
-            request.didComplete(error)
-            request.task = nil
-            index = idx
-            break
-        }
-        if let idx = index {
-            requests.remove(at: idx)
+        for (name, var array) in requests {
+            var found = false
+            for (idx, request) in array.enumerated() where task === request.task {
+                request.didComplete(error)
+                request.task = nil
+                array.remove(at: idx)
+                requests[name] = array
+                found = true
+                break
+            }
+            if found { break }
         }
     }
 
     public func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-        for request in requests where task === request.task {
-            request.didSendBodyData(bytesSent: bytesSent, totalBytesSent: totalBytesSent, totalBytesExpectedToSend: totalBytesExpectedToSend)
-            break
-        }
+        findRequest(with: task)?.didSendBodyData(bytesSent: bytesSent, totalBytesSent: totalBytesSent, totalBytesExpectedToSend: totalBytesExpectedToSend)
     }
 
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        for request in requests where downloadTask === request.task {
-            request.didFinishDownloading(location)
-            break
-        }
+        findRequest(with: downloadTask)?.didFinishDownloading(location)
     }
 
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        for request in requests where downloadTask === request.task {
-            request.didWriteData(bytesWritten: bytesWritten, totalBytesWritten: totalBytesWritten, totalBytesExpectedToWrite: totalBytesExpectedToWrite)
-            break
-        }
+        findRequest(with: downloadTask)?.didWriteData(bytesWritten: bytesWritten, totalBytesWritten: totalBytesWritten, totalBytesExpectedToWrite: totalBytesExpectedToWrite)
     }
 
 }

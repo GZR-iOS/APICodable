@@ -14,7 +14,7 @@ import Foundation
 
     public extension NSImage {
 
-        public func pngData() -> Data? {
+        func pngData() -> Data? {
             var bmp: NSBitmapImageRep? = nil
             if let bitmap = self.representations.first as? NSBitmapImageRep {
                 bmp = bitmap
@@ -24,7 +24,7 @@ import Foundation
             return bmp?.representation(using: .png, properties: [:])
         }
 
-        public func jpegData(compressionQuality: CGFloat = 1.0) -> Data? {
+        func jpegData(compressionQuality: CGFloat = 1.0) -> Data? {
             var bmp: NSBitmapImageRep? = nil
             if let bitmap = self.representations.first as? NSBitmapImageRep {
                 bmp = bitmap
@@ -42,7 +42,7 @@ import Foundation
 
 public extension UIImage {
 #if swift(>=4.2)
-    public func jpegData() -> Data? {
+    func jpegData() -> Data? {
         return jpegData(compressionQuality: 1.0)
     }
 #else
@@ -59,11 +59,11 @@ public extension UIImage {
 
 public extension HTTPURLResponse {
 
-    public var status: HTTPStatusCode {
+    var status: HTTPStatusCode {
         return HTTPStatusCode(self.statusCode)
     }
 
-    public func headerValue(_ key: HTTPResponseHeaderField) -> Any? {
+    func headerValue(_ key: HTTPResponseHeaderField) -> Any? {
         return self.allHeaderFields[key.value]
     }
 
@@ -71,11 +71,11 @@ public extension HTTPURLResponse {
 
 public extension URLRequest {
 
-    public mutating func setHttpHeader(key: HTTPRequestHeaderField, value: String?) {
+    mutating func setHttpHeader(key: HTTPRequestHeaderField, value: String?) {
         setValue(value, forHTTPHeaderField: key.value)
     }
 
-    public mutating func setMethod(_ method: HTTPMethod) {
+    mutating func setMethod(_ method: HTTPMethod) {
         self.httpMethod = method.value
     }
 
@@ -83,13 +83,13 @@ public extension URLRequest {
 
 public extension String.Encoding {
 
-    public init(httpCharset: String) {
+    init(httpCharset: String) {
         let cfEncoding = CFStringConvertIANACharSetNameToEncoding(httpCharset as CFString)
         let result = CFStringConvertEncodingToNSStringEncoding(cfEncoding)
         self.init(rawValue: result)
     }
 
-    public var httpContentTypeCharset: String {
+    var httpContentTypeCharset: String {
         let cfEncoding = CFStringConvertNSStringEncodingToEncoding(self.rawValue)
         return CFStringConvertEncodingToIANACharSetName(cfEncoding) as String
     }

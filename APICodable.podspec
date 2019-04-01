@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'APICodable'
-  s.version          = '1.0.1'
+  s.version          = '1.0.2'
   s.summary          = 'HTTP Request with NSURLSession and Swift Codable'
   s.description      = <<-DESC
 Use Swift Codable models to make request parameters.
@@ -21,4 +21,5 @@ Use URLSession to request HTTP.
   s.ios.deployment_target = '8.0'
   s.osx.deployment_target = '10.12'
   s.source_files     = 'APICodable/**/*'
+  s.dependency 'CommonLog'
 end

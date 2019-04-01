@@ -61,7 +61,7 @@ public class NWContentType: NWABNFHeaderLine {
 
         public let value: String
 
-        public init(_ raw: ValueType) {
+        public init(_ raw: String) {
             value = raw
         }
 

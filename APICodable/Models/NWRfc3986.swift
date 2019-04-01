@@ -116,7 +116,7 @@ public func NWUrlDecode(input: String, spacePlus: Bool = false, encoding: String
     var isEncoding = false
 
     let finishDecoding: () -> Bool = {
-        let data = Data(bytes: decodingValues)
+        let data = Data(bytes: decodingValues, count: decodingValues.count)
         if let str = String(data: data, encoding: encoding) {
             result += str
         } else {

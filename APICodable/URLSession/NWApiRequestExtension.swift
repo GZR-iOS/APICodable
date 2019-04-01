@@ -21,21 +21,21 @@ public extension NWApiRequest {
     }
 
     /// Create new request for GET request (parameter in form-data/url-encoded as URL query) and JSON response
-    public convenience init<ResponseType: Decodable>(get url: URL, parameter: Encodable?, onSuccess: DataSuccessAction?,
+    convenience init<ResponseType: Decodable>(get url: URL, parameter: Encodable?, onSuccess: DataSuccessAction?,
                                                      onFailure: DataFailureAction?, jsonResponseModel: ResponseType.Type) {
         self.init(type: .urlQuery, url: url, parameter: parameter, onSuccess: onSuccess,
                   onFailure: onFailure, jsonResponseModel: jsonResponseModel)
     }
 
     /// Create new request for POST request (parameter in form-data/url-encoded as request body) and JSON response
-    public convenience init<ResponseType: Decodable>(post url: URL, parameter: Encodable?, onSuccess: DataSuccessAction?,
+    convenience init<ResponseType: Decodable>(post url: URL, parameter: Encodable?, onSuccess: DataSuccessAction?,
                                                      onFailure: DataFailureAction?, jsonResponseModel: ResponseType.Type) {
         self.init(type: .requestBody, url: url, parameter: parameter, onSuccess: onSuccess,
                   onFailure: onFailure, jsonResponseModel: jsonResponseModel)
     }
 
     /// Create new request for POST request (parameter in application/json as request body) and JSON response
-    public convenience init<ResponseType: Decodable>(json url: URL, parameter: Encodable?, onSuccess: DataSuccessAction?,
+    convenience init<ResponseType: Decodable>(json url: URL, parameter: Encodable?, onSuccess: DataSuccessAction?,
                                                      onFailure: DataFailureAction?, jsonResponseModel: ResponseType.Type) {
         let maker = NWApiJsonRequestMaker()
         let handler = NWApiJsonResponseHandler<ResponseType>()
@@ -47,7 +47,7 @@ public extension NWApiRequest {
     }
 
     /// Create new request for POST request (parameter in multipart/form-data as request body) and JSON response
-    public convenience init<ResponseType: Decodable>(multipart url: URL, parameter: Encodable?, onSuccess: DataSuccessAction?,
+    convenience init<ResponseType: Decodable>(multipart url: URL, parameter: Encodable?, onSuccess: DataSuccessAction?,
                                                      onFailure: DataFailureAction?, jsonResponseModel: ResponseType.Type) {
         let maker = NWApiMultipartFormDataRequestMaker()
         let handler = NWApiJsonResponseHandler<ResponseType>()
@@ -60,7 +60,7 @@ public extension NWApiRequest {
 
     /// Create new request for POST request (parameter should be 1 of <String, Data, UIImage> only) as request body;
     /// if *useUploadTask == true*, parameter can be `URL` to file to upload) and JSON response
-    public convenience init<ResponseType: Decodable>(raw url: URL, parameter: Any?, onSuccess: DataSuccessAction?,
+    convenience init<ResponseType: Decodable>(raw url: URL, parameter: Any?, onSuccess: DataSuccessAction?,
                                                      onFailure: DataFailureAction?, jsonResponseModel: ResponseType.Type,
                                                      useUploadTask: Bool = false) {
         if useUploadTask {
@@ -95,13 +95,13 @@ public extension NWApiRequest {
     }
 
     /// Create new request for GET request (parameter in form-data/url-encoded as URL query), download response to *destination* file path.
-    public convenience init(downloadGet url: URL, parameter: Encodable?, onSuccess: DownloadSuccessAction?,
+    convenience init(downloadGet url: URL, parameter: Encodable?, onSuccess: DownloadSuccessAction?,
                              onFailure: DownloadFailureAction?, destination: URL) {
         self.init(type: .urlQuery, url: url, parameter: parameter, onSuccess: onSuccess, onFailure: onFailure, destination: destination)
     }
 
     /// Create new request for POST request (parameter in form-data/url-encoded as request body), download response to *destination* file path.
-    public convenience init(downloadPost url: URL, parameter: Encodable?, onSuccess: DownloadSuccessAction?,
+    convenience init(downloadPost url: URL, parameter: Encodable?, onSuccess: DownloadSuccessAction?,
                             onFailure: DownloadFailureAction?, destination: URL) {
         self.init(type: .urlQuery, url: url, parameter: parameter, onSuccess: onSuccess, onFailure: onFailure, destination: destination)
     }

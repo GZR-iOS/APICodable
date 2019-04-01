@@ -8,13 +8,11 @@
 
 Pod::Spec.new do |s|
   s.name             = 'APICodableEncoder'
-  s.version          = '1.0.1'
+  s.version          = '1.0.2'
   s.summary          = 'Swift Encoder encodes Encodable models into HTTP Request Data'
-
   s.description      = <<-DESC
   Swift Encoder encodes Encodable models into HTTP Request Data
   DESC
-
   s.homepage         = 'https://github.com/GZR-iOS/APICodable'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'DươngPQ' => 'duongpq@runsystem.net' }

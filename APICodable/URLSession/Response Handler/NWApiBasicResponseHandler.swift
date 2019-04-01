@@ -12,8 +12,8 @@ public let NWHTTPErrorDomain = "HTTPErrorDomain"
 /// Very basic response handler, which check response status code & store response data as binary.
 open class NWApiBasicResponseHandler: NWApiDataResponseHandler {
 
-    public private(set) var body: Data?
-    public private(set) var response: HTTPURLResponse?
+    public private(set) var rawData: Data?
+    public private(set) var header: HTTPURLResponse?
 
     public var responseBodyDescription: String? = nil
 
@@ -21,10 +21,10 @@ open class NWApiBasicResponseHandler: NWApiDataResponseHandler {
 
     }
 
-    open func processResponse(data: Data?, header: HTTPURLResponse?) throws {
-        body = data
-        response = header
-        if let resp = response {
+    open func processResponse(data: Data?, response: HTTPURLResponse?) throws {
+        rawData = data
+        header = response
+        if let resp = header {
             if resp.statusCode < 200 || resp.statusCode > 299 {
                 throw NSError(domain: NWHTTPErrorDomain, code: resp.statusCode,
                               userInfo: [NSLocalizedDescriptionKey: HTTPURLResponse.localizedString(forStatusCode: resp.statusCode)])

@@ -8,6 +8,7 @@
 
 import Cocoa
 import APICodable
+import CommonLog
 
 struct Sample: Encodable {
     var number: Int?
@@ -104,22 +105,22 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             var dataArgs = NWApiRequest.DataRequestArgument(request: maker, response: handler)
             dataArgs.parameter = parameter
             dataArgs.successAction = {(sender, response) in
-                if let res = response as? NWApiBasicResponseHandler, let data = res.body, let header = res.response {
+                if let res = response as? NWApiBasicResponseHandler, let data = res.rawData, let header = res.header {
                     var encoding = String.Encoding.utf8
                     if let contentTypeRaw = header.headerValue(HTTPResponseHeaderField.contentType) as? String, let contentType = try? NWContentType(httpContentType: contentTypeRaw),
                         let params = contentType.getValueAndParameters().1, let encodingName = params[NWContentType.MainType.TextSubType.paramCharset] {
                         encoding = String.Encoding(httpCharset: encodingName)
                     }
                     if let dataStr = String(data: data, encoding: encoding) {
-                        NWLog(">>> Request success:", dataStr)
+                        CMLog(">>> Request success:", dataStr)
                     } else {
-                        NWLog(">>> Request success:", data.count)
+                        CMLog(">>> Request success:", data.count)
                     }
                 }
                 wSelf?.hideIndicator()
             }
             dataArgs.failureAction = {(sender, response, error) in
-                NWLog(">>> Request failed:", error)
+                CMLog(">>> Request failed:", error)
                 wSelf?.hideIndicator()
             }
             do {
@@ -127,7 +128,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 try req.start()
                 showIndicator()
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
             }
         }
     }
@@ -139,22 +140,22 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             var dataArgs = NWApiRequest.UploadRequestArgument(request: maker, response: handler)
             dataArgs.parameter = parameter
             dataArgs.successAction = {(sender, response) in
-                if let res = response as? NWApiBasicResponseHandler, let data = res.body, let header = res.response {
+                if let res = response as? NWApiBasicResponseHandler, let data = res.rawData, let header = res.header {
                     var encoding = String.Encoding.utf8
                     if let contentTypeRaw = header.headerValue(HTTPResponseHeaderField.contentType) as? String, let contentType = try? NWContentType(httpContentType: contentTypeRaw),
                         let params = contentType.getValueAndParameters().1, let encodingName = params[NWContentType.MainType.TextSubType.paramCharset] {
                         encoding = String.Encoding(httpCharset: encodingName)
                     }
                     if let dataStr = String(data: data, encoding: encoding) {
-                        NWLog(">>> Request success:", dataStr)
+                        CMLog(">>> Request success:", dataStr)
                     } else {
-                        NWLog(">>> Request success:", data.count)
+                        CMLog(">>> Request success:", data.count)
                     }
                 }
                 wSelf?.hideIndicator()
             }
             dataArgs.failureAction = {(sender, response, error) in
-                NWLog(">>> Request failed:", error)
+                CMLog(">>> Request failed:", error)
                 wSelf?.hideIndicator()
             }
             do {
@@ -162,7 +163,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 try req.start()
                 showIndicator()
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
             }
         }
     }
@@ -204,14 +205,14 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         // make file
         if let image = makeScreenshot(), let data = image.jpegData(), var url = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false) {
             url.appendPathComponent("capture.jpg")
-            NWLog("File to upload:", url)
+            CMLog("File to upload:", url)
             do {
                 try data.write(to: url)
                 let maker = NWApiBasicUploadRequestMaker()
                 maker.contentType = try? NWContentType(type: .image, subType: NWContentType.MainType.ImageSubType.jpeg, parameter: nil)
                 makeUploadRequest(maker: maker, parameter: url)
             } catch (let err) {
-                NWLog(">>> ERROR Start request:", err)
+                CMLog(">>> ERROR Start request:", err)
             }
         }
     }
@@ -228,11 +229,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             let handler = NWApiBasicDownloadResponseHandler(dest)
             var dataArgs = NWApiRequest.DownloadRequestArgument(request: maker, response: handler)
             dataArgs.successAction = {(sender, response) in
-                NWLog(">>> Request success:", (response as? NWApiBasicDownloadResponseHandler)?.destination.path)
+                CMLog(">>> Request success:", (response as? NWApiBasicDownloadResponseHandler)?.destination.path)
                 wSelf?.hideIndicator()
             }
             dataArgs.failureAction = {(sender, response, error) in
-                NWLog(">>> Request failed:", error)
+                CMLog(">>> Request failed:", error)
                 wSelf?.hideIndicator()
             }
             let req = NWApiRequest(link: url, rqType: .download(dataArgs))
@@ -240,7 +241,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 try req.start()
                 showIndicator()
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
             }
         }
     }
@@ -261,17 +262,17 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             param.image = makeScreenshot()
             args.parameter = param
             args.successAction = {(sender, response) in
-                if let res = response as? NWApiBasicResponseHandler, let data = res.body {
+                if let res = response as? NWApiBasicResponseHandler, let data = res.rawData {
                     if let dataStr = String(data: data, encoding: .utf8) {
-                        NWLog(">>> Request success:", dataStr)
+                        CMLog(">>> Request success:", dataStr)
                     } else {
-                        NWLog(">>> Request success:", data.count)
+                        CMLog(">>> Request success:", data.count)
                     }
                 }
                 wSelf?.hideIndicator()
             }
             args.failureAction = {(sender, response, error) in
-                NWLog(">>> Request failed:", error)
+                CMLog(">>> Request failed:", error)
                 wSelf?.hideIndicator()
             }
             let req = NWApiRequest(link: url, rqType: .data(args))
@@ -279,7 +280,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 try req.start()
                 showIndicator()
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
             }
         }
     }
@@ -297,11 +298,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
             weak var wSelf = self
             let req = NWApiRequest(get: url, parameter: ["test": 1, "test2": 2], onSuccess: { (sender, response) in
                 if let res = response as? NWApiJsonResponseHandler<EXSampleResponse> {
-                    NWLog(">>> Request success:", res.responseObject)
+                    CMLog(">>> Request success:", res.responseObject)
                 }
                 wSelf?.hideIndicator()
             }, onFailure: { (sender, response, error) in
-                NWLog(">>> Request failed:", error)
+                CMLog(">>> Request failed:", error)
                 wSelf?.hideIndicator()
             }, jsonResponseModel: EXSampleResponse.self)
             req.requestConfigurationAction = {(request) in
@@ -311,7 +312,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 try req.start()
                 showIndicator()
             } catch (let error) {
-                NWLog(">>> ERROR Start request:", error)
+                CMLog(">>> ERROR Start request:", error)
             }
         }
     }

@@ -1,5 +1,7 @@
 use_frameworks!
+platform :ios, '10.0'
 
 target 'APICodable_Example' do
   pod 'APICodable', :path => '../'
+  pod 'CommonLog', :path => '../../CommonLog'
 end
