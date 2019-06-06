@@ -232,6 +232,7 @@ open class NWApiRequest {
         task = tsk
         tsk.resume()
         state = .sending
+        buffer = nil
         startingDate = Date()
         lastDate = startingDate
         if let request = tsk.currentRequest {

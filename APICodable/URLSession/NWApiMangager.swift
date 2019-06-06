@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CommonLog
 
 /// API Requests manager
 public class NWApiManager: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLSessionDataDelegate, URLSessionDownloadDelegate {
@@ -80,8 +81,11 @@ public class NWApiManager: NSObject, URLSessionDelegate, URLSessionTaskDelegate,
     // MARK: - URL Session delegate
 
     public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        CMLog("AUTHENTICATION type \(challenge.protectionSpace.authenticationMethod)", challenge.protectionSpace,
+            category: .warning, group: NWLogGroup)
         if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-            let hosts = trustedHosts, hosts.contains(challenge.protectionSpace.host), let trust = challenge.protectionSpace.serverTrust {
+            let hosts = trustedHosts, hosts.contains(challenge.protectionSpace.host),
+            let trust = challenge.protectionSpace.serverTrust {
             let credential = URLCredential(trust: trust)
             completionHandler(.useCredential, credential)
         } else if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodHTTPBasic,

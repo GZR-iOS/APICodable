@@ -19,14 +19,14 @@ open class NWApiJsonResponseHandler<ResponseType>: NWApiDataResponseHandler wher
     public init() {}
 
     open func processResponse(data: Data?, response: HTTPURLResponse?) throws {
+        rawData = data
+        header = response
         if let resp = header {
             if resp.statusCode < 200 || resp.statusCode > 299 {
                 throw NSError(domain: NWHTTPErrorDomain, code: resp.statusCode,
                               userInfo: [NSLocalizedDescriptionKey: HTTPURLResponse.localizedString(forStatusCode: resp.statusCode)])
             }
         }
-        rawData = data
-        header = response
         if let jsonData = rawData {
             let decoder = JSONDecoder()
             CMLog(jsonData.base64EncodedString(), try? JSONSerialization.jsonObject(with: jsonData, options: .init(rawValue: 0)))
